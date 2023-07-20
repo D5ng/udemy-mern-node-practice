@@ -28,9 +28,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importStar(require("express"));
 const places_routes_1 = __importDefault(require("./routes/places-routes"));
+const httpError_1 = __importDefault(require("./models/httpError"));
 const app = (0, express_1.default)();
 app.use((0, express_1.json)());
 app.use("/api/places", places_routes_1.default);
+app.use((req, res, next) => {
+    const error = new httpError_1.default("Could not find this route", 404);
+    throw error;
+});
 app.use((err, req, res, next) => {
     if (res.headersSent) {
         return next(err);
