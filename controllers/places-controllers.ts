@@ -2,6 +2,7 @@ import { RequestHandler } from "express"
 import HttpError from "../models/httpError"
 import { v4 as uuid } from "uuid"
 import { validationResult } from "express-validator"
+import getCoordsForAddress from "../util/location"
 
 interface PlaceType {
   id: string
@@ -52,15 +53,23 @@ const getPlacesUserById: RequestHandler = (req, res, next) => {
   res.json({ places })
 }
 
-const createPlace: RequestHandler = (req, res) => {
+const createPlace: RequestHandler = async (req, res, next) => {
   const error = validationResult(req)
 
   if (!error.isEmpty()) {
     res.status(422)
-    throw new HttpError("Invalid Inputs passed, please check your data", 422)
+    return next(new HttpError("Invalid Inputs passed, please check your data", 422))
+  }
+  const { title, description, address, creator } = req.body
+
+  let coordinates
+
+  try {
+    coordinates = await getCoordsForAddress(address)
+  } catch (error) {
+    return next(error)
   }
 
-  const { title, description, coordinates, address, creator } = req.body
   const createdPlace = {
     id: uuid(),
     title,
