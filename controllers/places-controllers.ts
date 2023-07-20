@@ -28,27 +28,27 @@ const DUMMY_PLACES: PlaceType[] = [
   },
 ]
 
-const getPlacesById: RequestHandler = (req, res, next) => {
+const getPlaceById: RequestHandler = (req, res, next) => {
   const placeId = req.params.pid
-  const places = DUMMY_PLACES.filter((place) => place.id === placeId)
-  if (!places || places.length === 0) {
+  const place = DUMMY_PLACES.find((place) => place.id === placeId)
+  if (!place) {
     const error = new HttpError("Could not find a places for the provided id.", 404)
     return next(error)
   }
 
-  res.json({ places })
+  res.json({ place })
 }
 
-const getPlaceUserById: RequestHandler = (req, res, next) => {
+const getPlacesUserById: RequestHandler = (req, res, next) => {
   const userId = req.params.uid
-  const place = DUMMY_PLACES.find((place) => place.creator === userId)
+  const places = DUMMY_PLACES.filter((place) => place.creator === userId)
 
-  if (!place) {
+  if (!places || places.length === 0) {
     const error = new HttpError("Could not find a place for the provided userId.", 404)
     return next(error)
   }
 
-  res.json({ place })
+  res.json({ places })
 }
 
 const createPlace: RequestHandler = (req, res) => {
@@ -90,4 +90,4 @@ const deletePlace: RequestHandler = (req, res) => {
   res.status(201).json({ place: DUMMY_PLACES, deletePlace })
 }
 
-export { getPlacesById, getPlaceUserById, createPlace, updatePlace, deletePlace }
+export { getPlaceById, getPlacesUserById, createPlace, updatePlace, deletePlace }

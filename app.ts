@@ -1,12 +1,14 @@
 import express, { NextFunction, Request, RequestHandler, Response, json } from "express"
-import placeRouter from "./routes/places-routes"
+import placeRoutes from "./routes/places-routes"
 import HttpError from "./models/httpError"
+import usersRoutes from "./routes/users-routes"
 
 const app = express()
 
 app.use(json())
 
-app.use("/api/places", placeRouter)
+app.use("/api/places", placeRoutes)
+app.use("/api/users", usersRoutes)
 
 app.use<RequestHandler>((req, res, next) => {
   const error = new HttpError("Could not find this route", 404)

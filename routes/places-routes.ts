@@ -1,16 +1,16 @@
 import { Router } from "express"
-import { createPlace, deletePlace, getPlacesById, getPlaceUserById, updatePlace } from "../controllers/places-controllers"
+import { createPlace, deletePlace, getPlaceById, getPlacesUserById, updatePlace } from "../controllers/places-controllers"
 
-const placeRouter = Router()
+const placeRoutes = Router()
 
-placeRouter.get("/:pid", getPlacesById)
+placeRoutes.get("/:pid", getPlaceById)
 
-placeRouter.get("/user/:uid", getPlaceUserById)
+placeRoutes.get("/user/:uid", getPlacesUserById)
 
-placeRouter.post("/", createPlace)
+placeRoutes.post("/", createPlace)
 
-placeRouter.patch("/:pid", updatePlace)
+placeRoutes.patch("/:pid", updatePlace)
 
-placeRouter.delete("/:pid", deletePlace)
+placeRoutes.delete("/:pid", deletePlace)
 
-export default placeRouter
+export default placeRoutes
