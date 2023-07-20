@@ -2,7 +2,19 @@ import express, { RequestHandler } from "express"
 import HttpError from "../models/httpError"
 import { v4 as uuid } from "uuid"
 
-const DUMMY_PLACES = [
+interface PlaceType {
+  id: string
+  title: string
+  description: string
+  location: {
+    lat: number
+    lng: number
+  }
+  address: string
+  creator: string
+}
+
+const DUMMY_PLACES: PlaceType[] = [
   {
     id: "p1",
     title: "Empire State Building",
@@ -16,23 +28,20 @@ const DUMMY_PLACES = [
   },
 ]
 
-const getPlaceById: RequestHandler = (req, res, next) => {
+const getPlacesById: RequestHandler = (req, res, next) => {
   const placeId = req.params.pid
-  const place = DUMMY_PLACES.find((place) => place.id === placeId)
-  if (!place) {
-    const error = new HttpError("Could not find a place for the provided id.", 404)
+  const places = DUMMY_PLACES.filter((place) => place.id === placeId)
+  if (!places || places.length === 0) {
+    const error = new HttpError("Could not find a places for the provided id.", 404)
     return next(error)
   }
 
-  res.json({ place })
+  res.json({ places })
 }
 
 const getPlaceUserById: RequestHandler = (req, res, next) => {
   const userId = req.params.uid
   const place = DUMMY_PLACES.find((place) => place.creator === userId)
-
-  console.log(DUMMY_PLACES, place)
-  // console.log(place)
 
   if (!place) {
     const error = new HttpError("Could not find a place for the provided userId.", 404)
@@ -42,7 +51,7 @@ const getPlaceUserById: RequestHandler = (req, res, next) => {
   res.json({ place })
 }
 
-const createPlace: RequestHandler = (req, res, next) => {
+const createPlace: RequestHandler = (req, res) => {
   const { title, description, coordinates, address, creator } = req.body
   const createdPlace = {
     id: uuid(),
@@ -58,4 +67,27 @@ const createPlace: RequestHandler = (req, res, next) => {
   res.status(201).json({ plcae: createdPlace })
 }
 
-export { getPlaceById, getPlaceUserById, createPlace }
+const updatePlace: RequestHandler = (req, res) => {
+  const { title, description } = req.body
+  const placeId = req.params.pid
+  const updatedPlace = { ...(<PlaceType>DUMMY_PLACES.find((place) => place.id === placeId)) }
+  const placeIndex = DUMMY_PLACES.findIndex((place) => place.id === placeId)
+
+  updatedPlace.title = title
+  updatedPlace.description = description
+
+  DUMMY_PLACES[placeIndex] = updatedPlace
+
+  res.status(201).json({ place: updatedPlace })
+}
+
+const deletePlace: RequestHandler = (req, res) => {
+  const placeId = req.params.pid
+  const placeIndex = DUMMY_PLACES.findIndex((place) => place.id === placeId)
+  const deletePlace = DUMMY_PLACES[placeIndex]
+  DUMMY_PLACES.splice(placeIndex, 1)
+
+  res.status(201).json({ place: DUMMY_PLACES, deletePlace })
+}
+
+export { getPlacesById, getPlaceUserById, createPlace, updatePlace, deletePlace }

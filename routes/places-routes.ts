@@ -1,10 +1,16 @@
 import { Router } from "express"
-import { createPlace, getPlaceById, getPlaceUserById } from "../controllers/places-controllers"
+import { createPlace, deletePlace, getPlacesById, getPlaceUserById, updatePlace } from "../controllers/places-controllers"
 
 const placeRouter = Router()
 
-placeRouter.get("/:pid", getPlaceById)
+placeRouter.get("/:pid", getPlacesById)
+
 placeRouter.get("/user/:uid", getPlaceUserById)
+
 placeRouter.post("/", createPlace)
+
+placeRouter.patch("/:pid", updatePlace)
+
+placeRouter.delete("/:pid", deletePlace)
 
 export default placeRouter
