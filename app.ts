@@ -1,5 +1,5 @@
 import express, { NextFunction, Request, Response, json } from "express"
-import placeRouter from "./routes/places"
+import placeRouter from "./routes/places-routes"
 import HttpError from "./models/httpError"
 
 const app = express()
@@ -10,8 +10,8 @@ app.use((err: HttpError, req: Request, res: Response, next: NextFunction) => {
   if (res.headersSent) {
     return next(err)
   }
-  res.status(err.code || 500)
-  res.json({ message: err.message || "An unknown error occurred", code: err.code })
+  res.status(err.errorCode || 500)
+  res.json({ message: err.message || "An unknown error occurred", code: err.errorCode })
 })
 
 app.listen(4000, () => {

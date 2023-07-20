@@ -1,4 +1,4 @@
-import { NextFunction, Router, Request, Response } from "express"
+import express, { RequestHandler } from "express"
 import HttpError from "../models/httpError"
 
 const DUMMY_PLACES = [
@@ -15,9 +15,7 @@ const DUMMY_PLACES = [
   },
 ]
 
-const placeRouter = Router()
-
-placeRouter.get("/:pid", (req: Request, res: Response, next: NextFunction) => {
+const getPlaceById: RequestHandler = (req, res, next) => {
   const placeId = req.params.pid
   const place = DUMMY_PLACES.find((place) => place.id === placeId)
   if (!place) {
@@ -26,9 +24,9 @@ placeRouter.get("/:pid", (req: Request, res: Response, next: NextFunction) => {
   }
 
   res.json({ place })
-})
+}
 
-placeRouter.get("/user/:uid", (req: Request, res: Response, next: NextFunction) => {
+const getPlaceUserById: RequestHandler = (req, res, next) => {
   const userId = req.params.pid
   const place = DUMMY_PLACES.find((place) => place.creator === userId)
   if (!place) {
@@ -37,6 +35,6 @@ placeRouter.get("/user/:uid", (req: Request, res: Response, next: NextFunction) 
   }
 
   res.json({ place })
-})
+}
 
-export default placeRouter
+export { getPlaceById, getPlaceUserById }
