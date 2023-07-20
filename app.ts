@@ -1,12 +1,12 @@
 import express, { NextFunction, Request, Response, json } from "express"
 import placeRouter from "./routes/places"
-import CodeError from "./utils/error"
+import HttpError from "./models/httpError"
 
 const app = express()
 
 app.use(json())
 app.use("/api/places", placeRouter)
-app.use((err: CodeError, req: Request, res: Response, next: NextFunction) => {
+app.use((err: HttpError, req: Request, res: Response, next: NextFunction) => {
   if (res.headersSent) {
     return next(err)
   }

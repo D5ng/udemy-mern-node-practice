@@ -4,7 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
-const error_1 = __importDefault(require("../utils/error"));
+const httpError_1 = __importDefault(require("../models/httpError"));
 const DUMMY_PLACES = [
     {
         id: "p1",
@@ -23,7 +23,7 @@ placeRouter.get("/:pid", (req, res, next) => {
     const placeId = req.params.pid;
     const place = DUMMY_PLACES.find((place) => place.id === placeId);
     if (!place) {
-        const error = new error_1.default({ code: 404, message: "Could not find a place for the provided id." });
+        const error = new httpError_1.default("Could not find a place for the provided id.", 404);
         return next(error);
     }
     res.json({ place });
@@ -32,7 +32,7 @@ placeRouter.get("/user/:uid", (req, res, next) => {
     const userId = req.params.pid;
     const place = DUMMY_PLACES.find((place) => place.creator === userId);
     if (!place) {
-        const error = new error_1.default({ code: 404, message: "Could not find a place for the provided userId." });
+        const error = new httpError_1.default("Could not find a place for the provided userId.", 404);
         return next(error);
     }
     res.json({ place });

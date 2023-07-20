@@ -1,5 +1,5 @@
 import { NextFunction, Router, Request, Response } from "express"
-import CustomError from "../utils/error"
+import HttpError from "../models/httpError"
 
 const DUMMY_PLACES = [
   {
@@ -21,7 +21,7 @@ placeRouter.get("/:pid", (req: Request, res: Response, next: NextFunction) => {
   const placeId = req.params.pid
   const place = DUMMY_PLACES.find((place) => place.id === placeId)
   if (!place) {
-    const error = new CustomError({ code: 404, message: "Could not find a place for the provided id." })
+    const error = new HttpError("Could not find a place for the provided id.", 404)
     return next(error)
   }
 
@@ -32,7 +32,7 @@ placeRouter.get("/user/:uid", (req: Request, res: Response, next: NextFunction) 
   const userId = req.params.pid
   const place = DUMMY_PLACES.find((place) => place.creator === userId)
   if (!place) {
-    const error = new CustomError({ code: 404, message: "Could not find a place for the provided userId." })
+    const error = new HttpError("Could not find a place for the provided userId.", 404)
     return next(error)
   }
 
