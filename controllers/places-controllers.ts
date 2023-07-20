@@ -1,5 +1,6 @@
 import express, { RequestHandler } from "express"
 import HttpError from "../models/httpError"
+import { v4 as uuid } from "uuid"
 
 const DUMMY_PLACES = [
   {
@@ -27,8 +28,12 @@ const getPlaceById: RequestHandler = (req, res, next) => {
 }
 
 const getPlaceUserById: RequestHandler = (req, res, next) => {
-  const userId = req.params.pid
+  const userId = req.params.uid
   const place = DUMMY_PLACES.find((place) => place.creator === userId)
+
+  console.log(DUMMY_PLACES, place)
+  // console.log(place)
+
   if (!place) {
     const error = new HttpError("Could not find a place for the provided userId.", 404)
     return next(error)
@@ -37,4 +42,20 @@ const getPlaceUserById: RequestHandler = (req, res, next) => {
   res.json({ place })
 }
 
-export { getPlaceById, getPlaceUserById }
+const createPlace: RequestHandler = (req, res, next) => {
+  const { title, description, coordinates, address, creator } = req.body
+  const createdPlace = {
+    id: uuid(),
+    title,
+    description,
+    location: coordinates,
+    address,
+    creator,
+  }
+
+  DUMMY_PLACES.push(createdPlace)
+
+  res.status(201).json({ plcae: createdPlace })
+}
+
+export { getPlaceById, getPlaceUserById, createPlace }
