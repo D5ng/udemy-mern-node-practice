@@ -1,6 +1,7 @@
-import express, { RequestHandler } from "express"
+import { RequestHandler } from "express"
 import HttpError from "../models/httpError"
 import { v4 as uuid } from "uuid"
+import { validationResult } from "express-validator"
 
 interface PlaceType {
   id: string
@@ -52,6 +53,13 @@ const getPlacesUserById: RequestHandler = (req, res, next) => {
 }
 
 const createPlace: RequestHandler = (req, res) => {
+  const error = validationResult(req)
+
+  if (!error.isEmpty()) {
+    res.status(422)
+    throw new HttpError("Invalid Inputs passed, please check your data", 422)
+  }
+
   const { title, description, coordinates, address, creator } = req.body
   const createdPlace = {
     id: uuid(),
@@ -68,6 +76,14 @@ const createPlace: RequestHandler = (req, res) => {
 }
 
 const updatePlace: RequestHandler = (req, res) => {
+  const error = validationResult(req)
+
+  console.log(error.isEmpty())
+
+  if (!error.isEmpty()) {
+    res.status(422)
+    throw new HttpError("Invalid Inputs passed, please check your data", 422)
+  }
   const { title, description } = req.body
   const placeId = req.params.pid
   const updatedPlace = { ...(<PlaceType>DUMMY_PLACES.find((place) => place.id === placeId)) }
@@ -83,6 +99,11 @@ const updatePlace: RequestHandler = (req, res) => {
 
 const deletePlace: RequestHandler = (req, res) => {
   const placeId = req.params.pid
+
+  if (!DUMMY_PLACES.find((place) => place.id === placeId)) {
+    throw new HttpError("Could not find a place for that id.", 404)
+  }
+
   const placeIndex = DUMMY_PLACES.findIndex((place) => place.id === placeId)
   const deletePlace = DUMMY_PLACES[placeIndex]
   DUMMY_PLACES.splice(placeIndex, 1)
