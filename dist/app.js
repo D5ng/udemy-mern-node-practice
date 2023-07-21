@@ -30,7 +30,10 @@ const express_1 = __importStar(require("express"));
 const places_routes_1 = __importDefault(require("./routes/places-routes"));
 const httpError_1 = __importDefault(require("./models/httpError"));
 const users_routes_1 = __importDefault(require("./routes/users-routes"));
+const mongoose_1 = __importDefault(require("mongoose"));
+require("dotenv/config");
 const app = (0, express_1.default)();
+const MONGO_API_KEY = process.env.MONGO_API_KEY;
 app.use((0, express_1.json)());
 app.use("/api/places", places_routes_1.default);
 app.use("/api/users", users_routes_1.default);
@@ -45,7 +48,8 @@ app.use((err, req, res, next) => {
     res.status(err.errorCode || 500);
     res.json({ message: err.message || "An unknown error occurred", code: err.errorCode });
 });
-app.listen(4000, () => {
-    console.log("listening at PORT", 4000);
-});
+mongoose_1.default
+    .connect(MONGO_API_KEY)
+    .then(() => app.listen(4000, () => console.log("listening at PORT, MongoDB Connect", 4000)))
+    .catch((err) => console.log(err));
 //# sourceMappingURL=app.js.map
