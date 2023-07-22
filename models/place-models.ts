@@ -1,4 +1,5 @@
-import { Schema, model } from "mongoose"
+import { Schema, Types, model } from "mongoose"
+import mongoose from "mongoose"
 
 interface PlaceType {
   id: string
@@ -10,7 +11,9 @@ interface PlaceType {
     lng: number
   }
   address: string
-  creator: string
+  creator: {
+    type: Types.ObjectId
+  }
 }
 
 const placeSchema = new Schema<PlaceType>({
@@ -22,7 +25,7 @@ const placeSchema = new Schema<PlaceType>({
     lat: { type: Number, required: true },
     lng: { type: Number, required: true },
   },
-  creator: { type: String, required: true },
+  creator: { type: mongoose.Types.ObjectId, ref: "User", required: true },
 })
 
 const Place = model<PlaceType>("Place", placeSchema)

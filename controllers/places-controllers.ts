@@ -3,35 +3,8 @@ import HttpError from "../models/httpError"
 import { validationResult } from "express-validator"
 import getCoordsForAddress from "../util/location"
 import Place from "../models/place-models"
-import { HydratedDocument } from "mongoose"
-
-interface PlaceType {
-  id: string
-  title: string
-  description: string
-  image: string
-  location: {
-    lat: number
-    lng: number
-  }
-  address: string
-  creator: string
-}
-
-const DUMMY_PLACES: PlaceType[] = [
-  {
-    id: "p1",
-    title: "Empire State Building",
-    description: "One of the most famous sky scrapers in the world!",
-    location: {
-      lat: 40.7484474,
-      lng: -73.9871516,
-    },
-    image: "Fsdfsdfsd",
-    address: "20 W 34th St, New York, NY 10001",
-    creator: "u1",
-  },
-]
+import User from "../models/user-models"
+import mongoose from "mongoose"
 
 const getPlaceById: RequestHandler = async (req, res, next) => {
   const placeId = req.params.pid
@@ -39,7 +12,7 @@ const getPlaceById: RequestHandler = async (req, res, next) => {
   let place
 
   try {
-    place = await Place.findById(placeId).exec()
+    place = await Place.findById(placeId)
   } catch (err) {
     return next(err)
   }
@@ -55,7 +28,7 @@ const getPlaceById: RequestHandler = async (req, res, next) => {
 const getPlacesUserById: RequestHandler = async (req, res, next) => {
   const userId = req.params.uid
 
-  let places: HydratedDocument<PlaceType>[]
+  let places
 
   try {
     places = await Place.find({ creator: userId }).exec()
@@ -99,10 +72,30 @@ const createPlace: RequestHandler = async (req, res, next) => {
     creator,
   })
 
+  let user
+
   try {
-    await createdPlace.save()
+    user = await User.findById(creator)
   } catch (err) {
-    console.log(err)
+    const error = new HttpError("Creating place failed. please try again", 500)
+    return next(error)
+  }
+
+  if (!user) {
+    const error = new HttpError("Could not find user for provided id", 500)
+    return next(error)
+  }
+
+  console.log(createdPlace)
+
+  try {
+    const sess = await mongoose.startSession()
+    sess.startTransaction()
+    await createdPlace.save({ session: sess })
+    user.places.push(createdPlace)
+    await user.save()
+    await sess.commitTransaction()
+  } catch (err) {
     const error = new HttpError("Creating place failed. please try again", 500)
     return next(error)
   }
