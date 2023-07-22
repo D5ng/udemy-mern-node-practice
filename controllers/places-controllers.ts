@@ -1,13 +1,15 @@
 import { RequestHandler } from "express"
 import HttpError from "../models/httpError"
-import { v4 as uuid } from "uuid"
 import { validationResult } from "express-validator"
 import getCoordsForAddress from "../util/location"
+import Place from "../models/place-models"
+import { HydratedDocument } from "mongoose"
 
 interface PlaceType {
   id: string
   title: string
   description: string
+  image: string
   location: {
     lat: number
     lng: number
@@ -25,32 +27,50 @@ const DUMMY_PLACES: PlaceType[] = [
       lat: 40.7484474,
       lng: -73.9871516,
     },
+    image: "Fsdfsdfsd",
     address: "20 W 34th St, New York, NY 10001",
     creator: "u1",
   },
 ]
 
-const getPlaceById: RequestHandler = (req, res, next) => {
+const getPlaceById: RequestHandler = async (req, res, next) => {
   const placeId = req.params.pid
-  const place = DUMMY_PLACES.find((place) => place.id === placeId)
+
+  let place
+
+  try {
+    place = await Place.findById(placeId).exec()
+  } catch (err) {
+    return next(err)
+  }
+
   if (!place) {
     const error = new HttpError("Could not find a places for the provided id.", 404)
     return next(error)
   }
 
-  res.json({ place })
+  res.json({ place: place.toObject({ getters: true }) })
 }
 
-const getPlacesUserById: RequestHandler = (req, res, next) => {
+const getPlacesUserById: RequestHandler = async (req, res, next) => {
   const userId = req.params.uid
-  const places = DUMMY_PLACES.filter((place) => place.creator === userId)
+
+  let places: HydratedDocument<PlaceType>[]
+
+  try {
+    places = await Place.find({ creator: userId }).exec()
+    console.log(places)
+  } catch (err) {
+    const error = new HttpError("Fetching places failed. please try again", 500)
+    return next(error)
+  }
 
   if (!places || places.length === 0) {
     const error = new HttpError("Could not find a place for the provided userId.", 404)
     return next(error)
   }
 
-  res.json({ places })
+  res.json({ places: places.map((place) => place.toObject({ getters: true })) })
 }
 
 const createPlace: RequestHandler = async (req, res, next) => {
@@ -70,24 +90,28 @@ const createPlace: RequestHandler = async (req, res, next) => {
     return next(error)
   }
 
-  const createdPlace = {
-    id: uuid(),
+  const createdPlace = new Place({
     title,
     description,
     location: coordinates,
     address,
+    image: "https://herb-api.hankookilbo.com/api/attaches/image/group/32c2878c-37a0-4c6c-b25f-619aa859aade",
     creator,
-  }
+  })
 
-  DUMMY_PLACES.push(createdPlace)
+  try {
+    await createdPlace.save()
+  } catch (err) {
+    console.log(err)
+    const error = new HttpError("Creating place failed. please try again", 500)
+    return next(error)
+  }
 
   res.status(201).json({ plcae: createdPlace })
 }
 
-const updatePlace: RequestHandler = (req, res) => {
+const updatePlace: RequestHandler = async (req, res, next) => {
   const error = validationResult(req)
-
-  console.log(error.isEmpty())
 
   if (!error.isEmpty()) {
     res.status(422)
@@ -95,29 +119,46 @@ const updatePlace: RequestHandler = (req, res) => {
   }
   const { title, description } = req.body
   const placeId = req.params.pid
-  const updatedPlace = { ...(<PlaceType>DUMMY_PLACES.find((place) => place.id === placeId)) }
-  const placeIndex = DUMMY_PLACES.findIndex((place) => place.id === placeId)
 
-  updatedPlace.title = title
-  updatedPlace.description = description
+  let place
 
-  DUMMY_PLACES[placeIndex] = updatedPlace
-
-  res.status(201).json({ place: updatedPlace })
-}
-
-const deletePlace: RequestHandler = (req, res) => {
-  const placeId = req.params.pid
-
-  if (!DUMMY_PLACES.find((place) => place.id === placeId)) {
-    throw new HttpError("Could not find a place for that id.", 404)
+  try {
+    place = (await Place.findByIdAndUpdate(placeId, { title, description }))!
+  } catch (err) {
+    const error = new HttpError("Something went wrong. could not update place", 500)
+    return next(error)
   }
 
-  const placeIndex = DUMMY_PLACES.findIndex((place) => place.id === placeId)
-  const deletePlace = DUMMY_PLACES[placeIndex]
-  DUMMY_PLACES.splice(placeIndex, 1)
+  try {
+    await place.save()
+  } catch (err) {
+    const error = new HttpError("Something went wrong. could not update place", 500)
+    return next(error)
+  }
 
-  res.status(201).json({ place: DUMMY_PLACES, deletePlace })
+  res.status(201).json({ place: place.toObject({ getters: true }) })
+}
+
+const deletePlace: RequestHandler = async (req, res, next) => {
+  const placeId = req.params.pid
+
+  let place
+
+  try {
+    place = await Place.findByIdAndDelete(placeId)
+  } catch (err) {
+    const error = new HttpError("Someting went wrong. Could not delete place")
+    return next(error)
+  }
+
+  try {
+    await place?.save()
+  } catch (err) {
+    const error = new HttpError("Someting went wrong. Could not delete place")
+    return next(error)
+  }
+
+  res.status(201).json({ message: "Place delete" })
 }
 
 export { getPlaceById, getPlacesUserById, createPlace, updatePlace, deletePlace }
